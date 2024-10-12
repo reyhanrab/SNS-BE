@@ -73,3 +73,19 @@ export const login = async (req, res) => {
   }
 };
 
+export const logout = async (req, res) => {
+  const email = req.body.email;
+  const updateDataObj = {};
+  updateDataObj.tokenStatus = false;
+  updateDataObj.tokenCreatedAt = null;
+  try {
+    const result = await User.updateOne({ email: email }, updateDataObj);
+    res
+      .clearCookie("authtoken")
+      .status(200)
+      .json({ message: "Logged out Successfully", result: result });
+  } catch (error) {
+    res.status(200).json({ message: `Error while logging out due to ${error}` });
+  }
+};
+
