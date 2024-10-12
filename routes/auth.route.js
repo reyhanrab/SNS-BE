@@ -8,4 +8,7 @@ router.post("/signup", authController.signup);
 // Login
 router.patch("/login", authController.login);
 
+// Logout
+router.patch("/logout", authController.logout);
+
 export default router;
