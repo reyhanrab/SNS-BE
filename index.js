@@ -14,6 +14,84 @@ const app = express();
 // Middleware
 executeMiddleware(app);
 
+//Check Auth for each API
+const allowedURLs = ["/api/v1/auth"];
+
+const allowedEndpoints = [
+  "/login",
+  "/verify-code",
+  "/resend-code",
+  "/forgot-password",
+  "/reset-password",
+  "/signup",
+];
+
+// const exemptPaths = ["/api/docs", "/favicon.ico", "/api/employee/files?mobile", "/api/employee/signup", "/api/merchant/signup", "/api/lender/signup"];
+
+// const isExempt = (req) => exemptPaths.some((path) => req.url.includes(path));
+
+const isAllowedURL = (req) => {
+  return allowedURLs.some((baseURL) =>
+    allowedEndpoints.some(
+      (endpoint) => req.url === `${baseURL}${endpoint}`
+      // || isExempt(req) || req.url.endsWith(corporateNameSuffix)
+    )
+  );
+};
+
+const handleUpdatePassword = (req) => {
+  const isUpdatePasswordURL = allowedURLs.some((url) => req.url === `${url}/updatePassword`);
+  const isInvalidAuthentication =
+    req.hasOwnProperty("body") &&
+    req.body.hasOwnProperty("authenticate") &&
+    req.body.authenticate === true;
+
+  if (isUpdatePasswordURL && isInvalidAuthentication) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+const handleAuthToken = async (req, res, next) => {
+  if (req.headers?.authtoken) {
+    const result = auth.verifyToken(req.headers?.authtoken);
+
+    if (result?.status === true) {
+      try {
+        const userData = await User.findById({ _id: result.payload?.userId }).exec();
+        if (userData?.tokenStatus) {
+          global.user = userData;
+          next();
+        } else {
+          res.status(404).json({ message: "User does not exist or is already logged out" });
+        }
+      } catch (error) {
+        console.log("Error while getting user info", error);
+        res.status(500).json({
+          message: "Unable to find user information due to technical error",
+          error: error.message,
+        });
+      }
+    } else {
+      res.status(401).json({ message: result.message ? result.message : "Invalid Token" });
+    }
+  } else {
+    res.status(401).json({ message: "Missing auth token in headers" });
+  }
+};
+
+app.use(async function (req, res, next) {
+  if (req.method === "OPTIONS" || isAllowedURL(req)) {
+    
+    next();
+  } else if (handleUpdatePassword(req)) {
+    next();
+  } else {
+    handleAuthToken(req, res, next);
+  }
+});
+
 // Routes
 app.use("/api/v1/auth", authRoutes);
 
