@@ -89,3 +89,46 @@ export const logout = async (req, res) => {
   }
 };
 
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "Email not found" });
+    }
+
+    // Generate a verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Save the code and its expiry to the user's document
+    const obj = {
+      resetPasswordToken: verificationCode,
+      resetPasswordExpire: Date.now() + 3600000, // 1 hour
+    };
+
+    await User.updateOne({ email: email }, obj);
+
+    try {
+      // Send verification code via email
+      const sentMail = await nodemailer.sendPasswordResetCode(email, verificationCode);
+
+      if (sentMail.accepted.length > 0) {
+        return res.status(200).json({ message: "Verification code sent to your email." });
+      } else {
+        throw new Error("Email failed to send");
+      }
+    } catch (err) {
+      // Rollback the action: clear resetPasswordToken and resetPasswordExpire if email fails
+      obj.resetPasswordToken = null;
+      obj.resetPasswordExpire = null;
+      // Save rollback changes
+      await User.updateOne({ email: email }, obj);
+      return res
+        .status(500)
+        .json({ message: "Failed to send verification code. Please try again.", error: err });
+    }
+  } catch (err) {
+    res.status(500).json({ message: `Server error due to ${err}. Please try again.` });
+  }
+};
