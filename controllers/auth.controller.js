@@ -132,3 +132,40 @@ export const forgotPassword = async (req, res) => {
     res.status(500).json({ message: `Server error due to ${err}. Please try again.` });
   }
 };
+
+export const resetPassword = async (req, res) => {
+  const { password, code } = req.body;
+
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: code,
+      resetPasswordExpire: { $gt: Date.now() }, // Ensure code is still valid
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired code." });
+    }
+
+    // Validate password strength here if necessary
+    if (password.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters long." });
+    }
+
+    let obj = {};
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    obj.password = await bcrypt.hash(password, salt);
+
+    // Clear the reset token and expiration
+    obj.resetPasswordToken = null;
+    obj.resetPasswordExpire = null;
+
+    // Save the updated user
+    await User.updateOne({ resetPasswordToken: code }, obj);
+
+    res.status(200).json({ message: "Password updated successfully." });
+  } catch (err) {
+    res.status(500).json({ message: "Server error. Please try again." });
+  }
+};

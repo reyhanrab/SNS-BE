@@ -14,4 +14,7 @@ router.patch("/logout", authController.logout);
 // forgot password
 router.patch("/forgot-password", authController.forgotPassword);
 
+// resent code
+router.patch("/resend-code", authController.resendCode);
+
 export default router;
