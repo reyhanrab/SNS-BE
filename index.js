@@ -1,8 +1,11 @@
 import express from "express";
 import { executeMiddleware } from "./lib/middleware.js";
+import * as auth from "./lib/auth.js";
 
+import campaignRoutes from "./routes/campaign.route.js";
 import authRoutes from "./routes/auth.route.js";
 
+import User from "./models/user.model.js";
 import { connect } from "./config/dbconnection.js";
 
 import dotenv from "dotenv";
@@ -26,15 +29,10 @@ const allowedEndpoints = [
   "/signup",
 ];
 
-// const exemptPaths = ["/api/docs", "/favicon.ico", "/api/employee/files?mobile", "/api/employee/signup", "/api/merchant/signup", "/api/lender/signup"];
-
-// const isExempt = (req) => exemptPaths.some((path) => req.url.includes(path));
-
 const isAllowedURL = (req) => {
   return allowedURLs.some((baseURL) =>
     allowedEndpoints.some(
       (endpoint) => req.url === `${baseURL}${endpoint}`
-      // || isExempt(req) || req.url.endsWith(corporateNameSuffix)
     )
   );
 };
@@ -94,7 +92,7 @@ app.use(async function (req, res, next) {
 
 // Routes
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/campaigns", logResponseBody, campaignRoutes);
+app.use("/api/v1/campaigns", campaignRoutes);
 
 //create connection
 connect();
