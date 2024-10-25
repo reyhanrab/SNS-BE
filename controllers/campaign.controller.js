@@ -97,9 +97,21 @@ export const createCampaign = async (req, res) => {
 
 // Get all campaigns
 export const getCampaigns = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
   try {
-    const campaigns = await Campaign.find();
-    res.status(200).json({ campaigns });
+    const campaigns = await Campaign.find()
+      .skip((page - 1) * limit)
+      .limit(limit);
+    const totalItems = await Campaign.countDocuments();
+    res.status(200).json({
+      results: campaigns,
+      metadata: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    });
   } catch (error) {
     res.status(500).json({ message: "Error fetching campaigns", error });
   }
