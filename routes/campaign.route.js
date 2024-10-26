@@ -8,5 +8,8 @@ router.post("/", campaignController.createCampaign);
 // Get all campaigns
 router.get("/", campaignController.getCampaigns);
 
+// Update a campaign
+router.put("/:id", campaignController.updateCampaign);
+
 export default
  router;
