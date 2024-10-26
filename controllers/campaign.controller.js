@@ -116,3 +116,18 @@ export const getCampaigns = async (req, res) => {
     res.status(500).json({ message: "Error fetching campaigns", error });
   }
 };
+
+// Update a campaign
+export const updateCampaign = async (req, res) => {
+  try {
+    const campaign = await Campaign.findByIdAndUpdate(req.params.id, req.body, { new: true });
+
+    if (!campaign) {
+      return res.status(404).json({ message: "Campaign not found" });
+    }
+
+    res.status(200).json({ message: "Campaign updated successfully", campaign });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating campaign", error });
+  }
+};
