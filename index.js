@@ -4,6 +4,7 @@ import * as auth from "./lib/auth.js";
 
 import campaignRoutes from "./routes/campaign.route.js";
 import authRoutes from "./routes/auth.route.js";
+import notificationRoutes from "./routes/notification.routes.js";
 
 import User from "./models/user.model.js";
 import { connect } from "./config/dbconnection.js";
@@ -31,9 +32,7 @@ const allowedEndpoints = [
 
 const isAllowedURL = (req) => {
   return allowedURLs.some((baseURL) =>
-    allowedEndpoints.some(
-      (endpoint) => req.url === `${baseURL}${endpoint}`
-    )
+    allowedEndpoints.some((endpoint) => req.url === `${baseURL}${endpoint}`)
   );
 };
 
@@ -81,7 +80,6 @@ const handleAuthToken = async (req, res, next) => {
 
 app.use(async function (req, res, next) {
   if (req.method === "OPTIONS" || isAllowedURL(req)) {
-    
     next();
   } else if (handleUpdatePassword(req)) {
     next();
@@ -93,6 +91,7 @@ app.use(async function (req, res, next) {
 // Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/campaigns", campaignRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 
 //create connection
 connect();

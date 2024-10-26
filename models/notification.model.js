@@ -40,4 +40,5 @@ const notificationLogSchema = new mongoose.Schema({
 // Export the model
 const NotificationLog = mongoose.model('notificationLog', notificationLogSchema);
 
-module.exports = NotificationLog;
+export default NotificationLog;
+
