@@ -12,3 +12,16 @@ export const getNotifications = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch notifications" });
   }
 };
+
+// Create a notification log
+export const createNotificationLog = async (req, res) => {
+  try {
+    const notificationData = req.body;
+    const notificationLog = new NotificationLog(notificationData);
+    await notificationLog.save();
+    res.status(201).json({ message: "Notification logged successfully.", notification: notificationLog });
+  } catch (error) {
+    console.error("Error logging notification:", error.message);
+    res.status(500).json({ message: "Error logging notification.", error: error.message });
+  }
+};

@@ -37,20 +37,16 @@ export const createCampaign = async (req, res) => {
         await Promise.all(emailPromises);
 
         // All emails sent successfully
-        res
-          .status(201)
-          .json({
-            message: "Campaigns created successfully and notifications sent.",
-            campaigns: result,
-          });
+        res.status(201).json({
+          message: "Campaigns created successfully and notifications sent.",
+          campaigns: result,
+        });
       } catch (error) {
         console.error("Error sending email notifications:", error.message);
-        res
-          .status(500)
-          .json({
-            message: "Campaigns created, but error occurred while sending notifications.",
-            campaigns: result,
-          });
+        res.status(500).json({
+          message: "Campaigns created, but error occurred while sending notifications.",
+          campaigns: result,
+        });
       }
     } else {
       // Handle single campaign object
@@ -71,23 +67,27 @@ export const createCampaign = async (req, res) => {
         const emailPromises = volunteers.map(async (volunteer) => {
           await nodemailer.newCampaignEmail(volunteer); // Ensure this method is defined in your nodemailer config
           console.log(`Email sent to ${volunteer.email}`);
+          // Log the notification for each volunteer
+          await NotificationLog.create({
+            email: volunteer.email,
+            campaignId: result._id, // Assuming result._id is the campaign ID
+            notificationType: "CampaignCreated",
+            sentAt: new Date(),
+            status: "Sent",
+          });
         });
 
         await Promise.all(emailPromises);
-        res
-          .status(201)
-          .json({
-            message: "Campaign created successfully and notifications sent.",
-            campaign: result,
-          });
+        res.status(201).json({
+          message: "Campaign created successfully and notifications sent.",
+          campaign: result,
+        });
       } catch (error) {
         console.error("Error sending email notifications:", error.message);
-        res
-          .status(500)
-          .json({
-            message: "Campaign created, but error occurred while sending notifications.",
-            campaign: result,
-          });
+        res.status(500).json({
+          message: "Campaign created, but error occurred while sending notifications.",
+          campaign: result,
+        });
       }
     }
   } catch (error) {
