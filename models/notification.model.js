@@ -12,7 +12,7 @@ const notificationLogSchema = new mongoose.Schema({
       message: props => `${props.value} is not a valid email!`
     }
   },
-  campaignId: {
+  campaign: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'campaign', // Reference to Campaign model
     required: true
@@ -29,7 +29,7 @@ const notificationLogSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Sent', 'Failed'],
+    enum: ['Sent', 'Failed', 'Read'],
     default: 'Sent',
     required: true
   }

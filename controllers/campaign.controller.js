@@ -1,6 +1,7 @@
 import nodemailer from "../lib/nodemailer.js";
 import Campaign from "../models/campaign.model.js";
 import User from "../models/user.model.js";
+import NotificationLog from "../models/notification.model.js";
 
 // Create and export new campaign(s) (supports both single and multiple objects)
 export const createCampaign = async (req, res) => {
@@ -54,7 +55,7 @@ export const createCampaign = async (req, res) => {
       const result = await campaign.save();
 
       // Send email notifications for a single campaign
-      try {
+      // try {
         const volunteers = await User.find({ role: "volunteer" });
 
         if (volunteers.length === 0) {
@@ -82,13 +83,13 @@ export const createCampaign = async (req, res) => {
           message: "Campaign created successfully and notifications sent.",
           campaign: result,
         });
-      } catch (error) {
-        console.error("Error sending email notifications:", error.message);
-        res.status(500).json({
-          message: "Campaign created, but error occurred while sending notifications.",
-          campaign: result,
-        });
-      }
+      // } catch (error) {
+      //   console.error("Error sending email notifications:", error.message);
+      //   res.status(500).json({
+      //     message: "Campaign created, but error occurred while sending notifications.",
+      //     campaign: result,
+      //   });
+      // }
     }
   } catch (error) {
     res.status(500).json({ message: "Error creating campaign(s)", error: error.message });
