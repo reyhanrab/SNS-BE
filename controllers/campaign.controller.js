@@ -71,7 +71,7 @@ export const createCampaign = async (req, res) => {
           // Log the notification for each volunteer
           await NotificationLog.create({
             email: volunteer.email,
-            campaignId: result._id, // Assuming result._id is the campaign ID
+            campaign: result._id, // Assuming result._id is the campaign ID
             notificationType: "CampaignCreated",
             sentAt: new Date(),
             status: "Sent",
