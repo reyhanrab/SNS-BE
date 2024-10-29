@@ -18,7 +18,7 @@ const registrationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["registered", "checked-in", "completed"], // Status of the volunteer in the campaign
+    enum: ["registered", "checked-in", "checked-out"], // Status of the volunteer in the campaign
     default: "registered",
     required: true,
   },
