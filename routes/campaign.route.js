@@ -9,7 +9,7 @@ router.post("/", campaignController.createCampaign);
 router.get("/", campaignController.getCampaigns);
 
 // Update a campaign
-router.put("/:id", campaignController.updateCampaign);
+router.patch("/:id", campaignController.updateCampaign);
 
 export default
  router;
