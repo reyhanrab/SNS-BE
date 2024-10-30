@@ -9,7 +9,9 @@ router.post("/", campaignController.createCampaign);
 router.get("/", campaignController.getCampaigns);
 
 // Update a campaign
-router.put("/:id", campaignController.updateCampaign);
+router.patch("/:id", campaignController.updateCampaign);
 
-export default
- router;
+// volunteer registration
+router.post("/:id/registration", campaignController.registration);
+
+export default router;

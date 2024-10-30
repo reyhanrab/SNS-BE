@@ -90,8 +90,8 @@ app.use(async function (req, res, next) {
 
 // Routes
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/campaigns", campaignRoutes);
-app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/campaign", campaignRoutes);
+app.use("/api/v1/notification", notificationRoutes);
 
 //create connection
 connect();
