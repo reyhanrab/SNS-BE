@@ -3,6 +3,7 @@ import Campaign from "../models/campaign.model.js";
 import User from "../models/user.model.js";
 import NotificationLog from "../models/notification.model.js";
 import Registration from "../models/registration.model.js";
+import { sendRegistrationEmail } from "../services/emailService.js";
 
 // Create and export new campaign(s) (supports both single and multiple objects)
 export const createCampaign = async (req, res) => {
@@ -132,12 +133,7 @@ export const updateCampaign = async (req, res) => {
   }
 };
 
-// POST /api/registration
-import Registration from "../models/Registration.js";
-import User from "../models/User.js";
-import { sendRegistrationEmail } from "../services/emailService.js";
-
-export const registration = async (req, res) => {
+export const register = async (req, res) => {
   const { volunteer } = req.body;
 
   try {
@@ -184,10 +180,7 @@ export const registration = async (req, res) => {
 
     try {
       // Send registration confirmation email
-      await sendRegistrationEmail(
-        volunteerData.email,
-        savedRegistration.registrationId
-      );
+      await sendRegistrationEmail(volunteerData.email, savedRegistration.registrationId);
     } catch (err) {
       return res.status(500).json({
         message: "Error sending confirmation email",
@@ -200,7 +193,6 @@ export const registration = async (req, res) => {
       results: savedRegistration,
       message: "Volunteer Registered Successfully",
     });
-
   } catch (error) {
     // Catch any other unexpected errors
     res.status(500).json({
@@ -210,3 +202,70 @@ export const registration = async (req, res) => {
   }
 };
 
+export const checkin = async (req, res) => {
+  const { id: campaignId, registrationId } = req.params;
+
+  try {
+    // Check if the campaign exists
+    const campaignExists = await Campaign.findById(campaignId);
+    if (!campaignExists) {
+      return res.status(404).json({ message: "Campaign not found" });
+    }
+
+    // Check if the registration exists for the given campaign
+    const registrationExists = await Registration.findOne({
+      campaign: campaignId,
+      _id: registrationId,
+    });
+    if (!registrationExists) {
+      return res.status(404).json({ message: "Registration not found" });
+    }
+
+    // Proceed to update the registration status to "checked-in"
+    const updatedRegistration = await Registration.findOneAndUpdate(
+      { campaign: campaignId, _id: registrationId },
+      { status: "checked-in", checkInDate: new Date() },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Volunteer checked in successfully",
+      registration: updatedRegistration,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error during check-in", error });
+  }
+};
+
+export const checkout = async (req, res) => {
+  try {
+    // Check if the campaign exists
+    const campaignExists = await Campaign.findById(req.params.id);
+    if (!campaignExists) {
+      return res.status(404).json({ message: "Campaign not found" });
+    }
+
+    // Check if the registration exists for the given campaign
+    const registrationExists = await Registration.findOne({
+      campaign: req.params.id,
+      _id: req.params.registrationId,
+    });
+    if (!registrationExists) {
+      return res.status(404).json({ message: "Registration not found" });
+    }
+
+    // Proceed to update the registration status to "checked-out"
+    const updatedRegistration = await Registration.findOneAndUpdate(
+      { campaign: req.params.id, _id: req.params.registrationId },
+      { status: "checked-out" },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Volunteer checked out successfully",
+      registration: updatedRegistration,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error during check-out", error });
+  }
+};
