@@ -3,7 +3,6 @@ import Campaign from "../models/campaign.model.js";
 import User from "../models/user.model.js";
 import NotificationLog from "../models/notification.model.js";
 import Registration from "../models/registration.model.js";
-import { sendRegistrationEmail } from "../services/emailService.js";
 
 // Create and export new campaign(s) (supports both single and multiple objects)
 export const createCampaign = async (req, res) => {
@@ -100,11 +99,20 @@ export const createCampaign = async (req, res) => {
 export const getCampaigns = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
+
+  // Remove pagination parameters from query to use remaining ones as filters
+  const filters = { ...req.query };
+  delete filters.page;
+  delete filters.limit;
+
   try {
-    const campaigns = await Campaign.find()
+    // Apply dynamic filters to the database query
+    const campaigns = await Campaign.find(filters)
       .skip((page - 1) * limit)
       .limit(limit);
-    const totalItems = await Campaign.countDocuments();
+
+    const totalItems = await Campaign.countDocuments(filters);
+
     res.status(200).json({
       results: campaigns,
       metadata: {
@@ -180,7 +188,7 @@ export const register = async (req, res) => {
 
     try {
       // Send registration confirmation email
-      await sendRegistrationEmail(volunteerData.email, savedRegistration.registrationId);
+      await nodemailer.sendRegistrationEmail(volunteerData.email, savedRegistration.registrationId);
     } catch (err) {
       return res.status(500).json({
         message: "Error sending confirmation email",
