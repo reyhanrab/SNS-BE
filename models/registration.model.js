@@ -30,6 +30,14 @@ const registrationSchema = new mongoose.Schema({
     type: Date,
     default: null, // This is only set when the volunteer checks in
   },
+  checkOutDate: {
+    type: Date,
+    default: null, // This is only set when the volunteer checks in
+  },
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 // Pre-save hook to generate Registration ID

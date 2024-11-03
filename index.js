@@ -5,6 +5,7 @@ import * as auth from "./lib/auth.js";
 import campaignRoutes from "./routes/campaign.route.js";
 import authRoutes from "./routes/auth.route.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import registrationRoutes from "./routes/registration.route.js";
 
 import User from "./models/user.model.js";
 import { connect } from "./config/dbconnection.js";
@@ -171,6 +172,7 @@ app.use(
 app.use("/api/v1/auth", logResponseBody, authRoutes);
 app.use("/api/v1/campaigns", logResponseBody, campaignRoutes);
 app.use("/api/v1/notifications", logResponseBody, notificationRoutes);
+app.use("/api/v1/registration", logResponseBody, registrationRoutes);
 
 //create connection
 connect();
