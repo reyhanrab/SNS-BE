@@ -2,6 +2,7 @@ import nodemailer from "../lib/nodemailer.js";
 import Campaign from "../models/campaign.model.js";
 import User from "../models/user.model.js";
 import NotificationLog from "../models/notification.model.js";
+import Registration from "../models/registration.model.js";
 
 // Create and export new campaign(s) (supports both single and multiple objects)
 export const createCampaign = async (req, res) => {
@@ -56,33 +57,31 @@ export const createCampaign = async (req, res) => {
 
       // Send email notifications for a single campaign
       // try {
-        const volunteers = await User.find({ role: "volunteer" });
+      const volunteers = await User.find({ role: "volunteer" });
 
-        if (volunteers.length === 0) {
-          console.log("No volunteers found to notify.");
-          return res
-            .status(201)
-            .json({ message: "Campaign created successfully", campaign: result });
-        }
+      if (volunteers.length === 0) {
+        console.log("No volunteers found to notify.");
+        return res.status(201).json({ message: "Campaign created successfully", campaign: result });
+      }
 
-        const emailPromises = volunteers.map(async (volunteer) => {
-          await nodemailer.newCampaignEmail(volunteer); // Ensure this method is defined in your nodemailer config
-          console.log(`Email sent to ${volunteer.email}`);
-          // Log the notification for each volunteer
-          await NotificationLog.create({
-            email: volunteer.email,
-            campaign: result._id, // Assuming result._id is the campaign ID
-            notificationType: "CampaignCreated",
-            sentAt: new Date(),
-            status: "Sent",
-          });
+      const emailPromises = volunteers.map(async (volunteer) => {
+        await nodemailer.newCampaignEmail(volunteer); // Ensure this method is defined in your nodemailer config
+        console.log(`Email sent to ${volunteer.email}`);
+        // Log the notification for each volunteer
+        await NotificationLog.create({
+          email: volunteer.email,
+          campaign: result._id, // Assuming result._id is the campaign ID
+          notificationType: "CampaignCreated",
+          sentAt: new Date(),
+          status: "Sent",
         });
+      });
 
-        await Promise.all(emailPromises);
-        res.status(201).json({
-          message: "Campaign created successfully and notifications sent.",
-          campaign: result,
-        });
+      await Promise.all(emailPromises);
+      res.status(201).json({
+        message: "Campaign created successfully and notifications sent.",
+        campaign: result,
+      });
       // } catch (error) {
       //   console.error("Error sending email notifications:", error.message);
       //   res.status(500).json({
@@ -100,11 +99,20 @@ export const createCampaign = async (req, res) => {
 export const getCampaigns = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
+
+  // Remove pagination parameters from query to use remaining ones as filters
+  const filters = { ...req.query };
+  delete filters.page;
+  delete filters.limit;
+
   try {
-    const campaigns = await Campaign.find()
+    // Apply dynamic filters to the database query
+    const campaigns = await Campaign.find(filters)
       .skip((page - 1) * limit)
       .limit(limit);
-    const totalItems = await Campaign.countDocuments();
+
+    const totalItems = await Campaign.countDocuments(filters);
+
     res.status(200).json({
       results: campaigns,
       metadata: {
@@ -130,5 +138,142 @@ export const updateCampaign = async (req, res) => {
     res.status(200).json({ message: "Campaign updated successfully", campaign });
   } catch (error) {
     res.status(500).json({ message: "Error updating campaign", error });
+  }
+};
+
+export const register = async (req, res) => {
+  const { volunteer } = req.body;
+
+  try {
+    // Check if the campaign ID is provided
+    if (!req.params.id) {
+      return res.status(400).json({ message: "Campaign ID is required" });
+    }
+
+    // Check if the volunteer ID is provided
+    if (!volunteer) {
+      return res.status(400).json({ message: "Volunteer ID is required" });
+    }
+
+    // Create a new registration instance
+    const newRegistration = new Registration({
+      campaign: req.params.id,
+      volunteer,
+    });
+
+    let savedRegistration;
+    try {
+      // Save registration to the database
+      savedRegistration = await newRegistration.save();
+    } catch (err) {
+      return res.status(500).json({
+        message: "Error saving registration to the database",
+        error: err.message,
+      });
+    }
+
+    let volunteerData;
+    try {
+      // Fetch volunteer's email from the User model
+      volunteerData = await User.findById(volunteer).select("email");
+      if (!volunteerData) {
+        return res.status(404).json({ message: "Volunteer not found" });
+      }
+    } catch (err) {
+      return res.status(500).json({
+        message: "Error fetching volunteer data",
+        error: err.message,
+      });
+    }
+
+    try {
+      // Send registration confirmation email
+      await nodemailer.sendRegistrationEmail(volunteerData.email, savedRegistration.registrationId);
+    } catch (err) {
+      return res.status(500).json({
+        message: "Error sending confirmation email",
+        error: err.message,
+      });
+    }
+
+    // Successful response
+    res.status(200).json({
+      results: savedRegistration,
+      message: "Volunteer Registered Successfully",
+    });
+  } catch (error) {
+    // Catch any other unexpected errors
+    res.status(500).json({
+      message: "An unexpected error occurred",
+      error: error.message,
+    });
+  }
+};
+
+export const checkin = async (req, res) => {
+  const { id: campaignId, registrationId } = req.params;
+
+  try {
+    // Check if the campaign exists
+    const campaignExists = await Campaign.findById(campaignId);
+    if (!campaignExists) {
+      return res.status(404).json({ message: "Campaign not found" });
+    }
+
+    // Check if the registration exists for the given campaign
+    const registrationExists = await Registration.findOne({
+      campaign: campaignId,
+      _id: registrationId,
+    });
+    if (!registrationExists) {
+      return res.status(404).json({ message: "Registration not found" });
+    }
+
+    // Proceed to update the registration status to "checked-in"
+    const updatedRegistration = await Registration.findOneAndUpdate(
+      { campaign: campaignId, _id: registrationId },
+      { status: "checked-in", checkInDate: new Date() },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Volunteer checked in successfully",
+      registration: updatedRegistration,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error during check-in", error });
+  }
+};
+
+export const checkout = async (req, res) => {
+  try {
+    // Check if the campaign exists
+    const campaignExists = await Campaign.findById(req.params.id);
+    if (!campaignExists) {
+      return res.status(404).json({ message: "Campaign not found" });
+    }
+
+    // Check if the registration exists for the given campaign
+    const registrationExists = await Registration.findOne({
+      campaign: req.params.id,
+      _id: req.params.registrationId,
+    });
+    if (!registrationExists) {
+      return res.status(404).json({ message: "Registration not found" });
+    }
+
+    // Proceed to update the registration status to "checked-out"
+    const updatedRegistration = await Registration.findOneAndUpdate(
+      { campaign: req.params.id, _id: req.params.registrationId },
+      { status: "checked-out" },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Volunteer checked out successfully",
+      registration: updatedRegistration,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error during check-out", error });
   }
 };
