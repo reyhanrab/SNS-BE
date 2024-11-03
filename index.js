@@ -5,6 +5,7 @@ import * as auth from "./lib/auth.js";
 import campaignRoutes from "./routes/campaign.route.js";
 import authRoutes from "./routes/auth.route.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import registrationRoutes from "./routes/registration.route.js";
 
 import User from "./models/user.model.js";
 import { connect } from "./config/dbconnection.js";
@@ -92,6 +93,7 @@ app.use(async function (req, res, next) {
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/campaign", campaignRoutes);
 app.use("/api/v1/notification", notificationRoutes);
+app.use("/api/v1/registration", registrationRoutes);
 
 //create connection
 connect();
