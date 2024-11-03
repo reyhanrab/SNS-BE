@@ -12,6 +12,12 @@ import { connect } from "./config/dbconnection.js";
 
 import dotenv from "dotenv";
 
+import morgan from "morgan";
+import { createStream } from "rotating-file-stream";
+import path from "path";
+import fs from "fs";
+import { v4 as uuidv4 } from "uuid";
+
 dotenv.config(); // Load environment variables from .env file
 
 const app = express();
@@ -89,11 +95,84 @@ app.use(async function (req, res, next) {
   }
 });
 
+// Create logs folder if not exists
+const logsFolder = path.join(process.cwd(), "logs");
+if (!fs.existsSync(logsFolder)) {
+  fs.mkdirSync(logsFolder, { recursive: true }); // Ensure that the entire path is created if needed
+}
+
+const generateFileName = () => {
+  const currentDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD format
+  return `access-${currentDate}.log`;
+};
+
+// Create a rotating write stream for Morgan to log
+const accessLogStream = createStream(generateFileName, {
+  interval: "1d", // rotate daily
+  path: logsFolder,
+});
+
+// Error handling for the log stream
+accessLogStream.on("error", (err) => {
+  console.error("Failed to create log stream:", err);
+});
+
+// Variable to store the response body for each request
+let currentResponseBody = {};
+
+// Custom middleware for logging response body
+const logResponseBody = (req, res, next) => {
+  const originalSend = res.send;
+
+  res.send = function (body) {
+    // Store the response body
+    currentResponseBody = body;
+
+    // Call the original send method
+    originalSend.apply(res, arguments);
+  };
+
+  next();
+};
+
+morgan
+  .token("body", (req) => JSON.stringify(req.body))
+  .token("id", () => uuidv4())
+  .token("resBody", () => currentResponseBody)
+  .token("date", () => new Date())
+  .token("user", () => (global.user && global.user.email ? global.user.email : "-"));
+
+app.use(
+  morgan(
+    '{ "id": ":id", "timestamp": ":date", "user": ":user", "method": ":method", "url": ":url", "status": ":status", "body": :body, "resBody": :resBody }',
+    {
+      stream: accessLogStream,
+      format: (tokens, req, res) => {
+        // Parse and format the JSON string for the body
+        const body = tokens.body(req, res);
+        const parsedBody = body ? JSON.parse(body) : null;
+
+        // Return the formatted log entry
+        return JSON.stringify({
+          id: tokens.id(req, res),
+          date: tokens.date(),
+          method: tokens.method(req, res),
+          url: tokens.url(req, res),
+          status: tokens.status(req, res),
+          body: parsedBody,
+          resBody: tokens.resBody(),
+          user: tokens.user(req, res),
+        });
+      },
+    }
+  )
+);
+
 // Routes
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/campaign", campaignRoutes);
-app.use("/api/v1/notification", notificationRoutes);
-app.use("/api/v1/registration", registrationRoutes);
+app.use("/api/v1/auth", logResponseBody, authRoutes);
+app.use("/api/v1/campaigns", logResponseBody, campaignRoutes);
+app.use("/api/v1/notifications", logResponseBody, notificationRoutes);
+app.use("/api/v1/registration", logResponseBody, registrationRoutes);
 
 //create connection
 connect();
