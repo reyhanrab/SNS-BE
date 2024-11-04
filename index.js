@@ -170,8 +170,8 @@ app.use(
 
 // Routes
 app.use("/api/v1/auth", logResponseBody, authRoutes);
-app.use("/api/v1/campaigns", logResponseBody, campaignRoutes);
-app.use("/api/v1/notifications", logResponseBody, notificationRoutes);
+app.use("/api/v1/campaign", logResponseBody, campaignRoutes);
+app.use("/api/v1/notification", logResponseBody, notificationRoutes);
 app.use("/api/v1/registration", logResponseBody, registrationRoutes);
 
 //create connection
