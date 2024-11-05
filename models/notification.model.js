@@ -19,7 +19,7 @@ const notificationLogSchema = new mongoose.Schema({
   },
   notificationType: {
     type: String,
-    enum: ['CampaignCreated', 'VolunteerRegistration', 'Reminder'], // Add more types as needed
+    enum: ['New Campaign', 'Volunteer Registration', 'Reminder'], // Add more types as needed
     required: true
   },
   sentAt: {
