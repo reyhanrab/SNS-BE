@@ -17,6 +17,7 @@ import { createStream } from "rotating-file-stream";
 import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
+import { redisConnect } from "./lib/redis.js";
 
 dotenv.config(); // Load environment variables from .env file
 
@@ -174,8 +175,11 @@ app.use("/api/v1/campaign", logResponseBody, campaignRoutes);
 app.use("/api/v1/notification", logResponseBody, notificationRoutes);
 app.use("/api/v1/registration", logResponseBody, registrationRoutes);
 
-//create connection
+//db connection
 connect();
+
+//redis connection
+redisConnect();
 
 // Start server
 const PORT = 3000;
