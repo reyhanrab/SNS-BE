@@ -4,10 +4,10 @@ import { clearRedixCache, saveDataToRedis, sendDataFromRedis } from "../lib/redi
 const router = express.Router();
 
 // Create a new campaign
-router.post("/", campaignController.createCampaign);
+router.post("/", clearRedixCache("/campaign"), campaignController.createCampaign);
 
 // Get all campaigns
-router.get("/", sendDataFromRedis, saveDataToRedis(), clearRedixCache("/campaign"), campaignController.getCampaigns);
+router.get("/", sendDataFromRedis, saveDataToRedis(), campaignController.getCampaigns);
 
 // Update a campaign
 router.patch("/:id", clearRedixCache("/campaign"), campaignController.updateCampaign);
