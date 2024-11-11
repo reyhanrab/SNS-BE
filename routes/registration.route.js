@@ -1,6 +1,6 @@
 import express from "express";
 import * as registrationController from "../controllers/registration.controller.js";
-import { saveDataToRedis, sendDataFromRedis } from "../lib/redis.js";
+import { clearRedixCache, saveDataToRedis, sendDataFromRedis } from "../lib/redis.js";
 const router = express.Router();
 
 // Get all campaigns

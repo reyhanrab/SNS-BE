@@ -6,6 +6,7 @@ import campaignRoutes from "./routes/campaign.route.js";
 import authRoutes from "./routes/auth.route.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import registrationRoutes from "./routes/registration.route.js";
+import donationRoutes from "./routes/donation.route.js";
 
 import User from "./models/user.model.js";
 import { connect } from "./config/dbconnection.js";
@@ -27,7 +28,7 @@ const app = express();
 executeMiddleware(app);
 
 //Check Auth for each API
-const allowedURLs = ["/api/v1/auth"];
+const allowedURLs = ["/api/v1/auth", "/api/v1"];
 
 const allowedEndpoints = [
   "/login",
@@ -36,6 +37,7 @@ const allowedEndpoints = [
   "/forgot-password",
   "/reset-password",
   "/signup",
+  "/donation/donate"
 ];
 
 const isAllowedURL = (req) => {
@@ -174,6 +176,7 @@ app.use("/api/v1/auth", logResponseBody, authRoutes);
 app.use("/api/v1/campaign", logResponseBody, campaignRoutes);
 app.use("/api/v1/notification", logResponseBody, notificationRoutes);
 app.use("/api/v1/registration", logResponseBody, registrationRoutes);
+app.use("/api/v1/donation", logResponseBody, donationRoutes);
 
 //db connection
 connect();
