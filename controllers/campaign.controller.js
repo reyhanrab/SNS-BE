@@ -95,8 +95,18 @@ export const createCampaign = async (req, res) => {
   }
 };
 
-// Get all campaigns
-export const getCampaigns = async (req, res) => {
+export const getAllCampaigns = async (req, res) => {
+  try {
+    const campaigns = await Campaign.find();
+
+    res.status(200).json({ results: campaigns });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching campaigns", error });
+  }
+};
+
+// Get all paginated campaigns
+export const getPaginatedCampaigns = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
 
@@ -126,6 +136,16 @@ export const getCampaigns = async (req, res) => {
         currentPage: page,
       },
     });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching campaigns", error });
+  }
+};
+
+export const getCampaginById = async (req, res) => {
+  try {
+    const campaign = await Campaign.findById(req.params.id);
+
+    res.status(200).json({ results: campaign });
   } catch (error) {
     res.status(500).json({ message: "Error fetching campaigns", error });
   }

@@ -1,14 +1,24 @@
 import Stripe from "stripe";
 import dotenv from "dotenv";
 import Payment from "../models/payment.model.js";
+import Campaign from "../models/campaign.model.js";
 
 dotenv.config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRETKEY);
 
 export const donate = async (req, res) => {
-  const { amount, cardHolderName, country, address, cardType, currency, userId, campaignId, paymentMethodId } =
-    req.body;
+  const {
+    amount,
+    cardHolderName,
+    country,
+    address,
+    cardType,
+    currency,
+    userId,
+    campaignId,
+    paymentMethodId,
+  } = req.body;
 
   // Check for required fields
   if (
@@ -33,7 +43,7 @@ export const donate = async (req, res) => {
       amount: amountInCents,
       currency: currency.toLowerCase(),
       payment_method: paymentMethodId,
-      payment_method_types: ['card'], // Only accept card payments, preventing redirects
+      payment_method_types: ["card"], // Only accept card payments, preventing redirects
       confirm: true,
       description: `Payment by ${cardHolderName} from ${country}`,
       metadata: {
@@ -62,13 +72,12 @@ export const donate = async (req, res) => {
 
       // Save payment to the database
       const response = await newPayment.save();
+      await Campaign.findByIdAndUpdate(campaignId, { $inc: { raisedAmount: amount } });
       console.log("Payment data saved successfully:", response);
-      res
-        .status(200)
-        .json({
-          message: "Payment successful, Payment data saved successfully",
-          result: newPayment,
-        });
+      res.status(200).json({
+        message: "Payment successful, Payment data saved successfully",
+        result: newPayment,
+      });
     } else {
       res.status(400).json({ error: "Payment could not be completed" });
     }

@@ -64,15 +64,13 @@ export const login = async (req, res) => {
 
     const updateDataObj = {
       tokenStatus: true,
-      tokenCreatedAt: Date.now()
+      tokenCreatedAt: Date.now(),
     };
 
     try {
-      const result = await User.findByIdAndUpdate(
-        { _id: userData._id },
-        updateDataObj,
-        { new: true }
-      ).exec();
+      const result = await User.findByIdAndUpdate({ _id: userData._id }, updateDataObj, {
+        new: true,
+      }).exec();
 
       res
         .cookie("authtoken", newToken.token)
@@ -82,11 +80,10 @@ export const login = async (req, res) => {
       console.error("Unable to update token status due to " + error.message);
       return res.status(500).json({ message: "Failed to update token status" });
     }
-
   } catch (error) {
     return res.status(400).json({
       message: "Unable to find the user. User does not exist with this email",
-      error
+      error,
     });
   }
 };
@@ -237,6 +234,44 @@ export const resetPassword = async (req, res) => {
 
     // Save the updated user
     await User.updateOne({ resetPasswordToken: code }, obj);
+
+    res.status(200).json({ message: "Password updated successfully." });
+  } catch (err) {
+    res.status(500).json({ message: "Server error. Please try again." });
+  }
+};
+
+export const resetPasswordWhenLoggedIn = async (req, res) => {
+  const { id } = req.params;
+  const { password } = req.body;
+
+  try {
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired code." });
+    }
+
+    // Validate password strength here if necessary
+    if (password.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters long." });
+    }
+
+    // Check if the new password is the same as the current password
+    const isSamePassword = await bcrypt.compare(password, user.password);
+
+    if (isSamePassword) {
+      return res
+        .status(400)
+        .json({ message: "New password cannot be the same as the current password." });
+    }
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Save the updated user
+    await User.findByIdAndUpdate(id, { password: hashedPassword });
 
     res.status(200).json({ message: "Password updated successfully." });
   } catch (err) {
