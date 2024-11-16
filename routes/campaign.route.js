@@ -1,18 +1,24 @@
 import express from "express";
 import * as campaignController from "../controllers/campaign.controller.js";
-import { clearRedixCache, saveDataToRedis, sendDataFromRedis } from "../lib/redis.js";
+import { clearRedisCache, saveDataToRedis, sendDataFromRedis } from "../lib/redis.js";
 const router = express.Router();
 
 // Create a new campaign
-router.post("/", clearRedixCache("/campaign"), campaignController.createCampaign);
+router.post("/", clearRedisCache("/campaign"), campaignController.createCampaign);
 
 // Get all campaigns
-router.get("/", sendDataFromRedis, saveDataToRedis(), campaignController.getCampaigns);
+router.get("/", sendDataFromRedis, saveDataToRedis(), campaignController.getAllCampaigns);
+
+// Get all paginated
+router.get("/paginated", campaignController.getPaginatedCampaigns);
+
+// Get all campaigns
+router.get("/:id", campaignController.getCampaginById);
 
 // Update a campaign
-router.patch("/:id", clearRedixCache("/campaign"), campaignController.updateCampaign);
+router.patch("/:id", clearRedisCache("/campaign"), campaignController.updateCampaign);
 
 // volunteer registration
-router.post("/:id/registration", clearRedixCache("/registration"), campaignController.register);
+router.post("/:id/registration", clearRedisCache("/registration"), campaignController.register);
 
 export default router;
