@@ -13,6 +13,9 @@ router.get("/", userController.getUsers);
 // Get a user by ID
 router.get("/:id", userController.getUserById);
 
+// Get donations user by ID
+router.get("/:id/donations", userController.getDonationById);
+
 // Update a user
 router.patch("/:id", userController.updateUser);
 
