@@ -9,7 +9,6 @@ import registrationRoutes from "./routes/registration.route.js";
 import donationRoutes from "./routes/donation.route.js";
 import userRoutes from "./routes/user.route.js";
 
-
 import User from "./models/user.model.js";
 import { connect } from "./config/dbconnection.js";
 
@@ -39,7 +38,7 @@ const allowedEndpoints = [
   "/forgot-password",
   "/reset-password",
   "/signup",
-  "/donation/donate"
+  "/donation/donate",
 ];
 
 const isAllowedURL = (req) => {
@@ -65,6 +64,15 @@ const handleUpdatePassword = (req) => {
 const handleAuthToken = async (req, res, next) => {
   if (req.headers?.authtoken) {
     const result = auth.verifyToken(req.headers?.authtoken);
+    
+    if (!result?.status) {
+      // Clear the authentication cookie
+      res.clearCookie("authtoken");
+      // Send 401 response with a message instructing the client to redirect
+      return res.status(401).json({
+        message: result?.message || "Invalid Token. Redirecting to sign-in.",
+      });
+    }
 
     if (result?.status === true) {
       try {

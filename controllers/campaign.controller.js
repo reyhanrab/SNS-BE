@@ -3,6 +3,7 @@ import Campaign from "../models/campaign.model.js";
 import User from "../models/user.model.js";
 import NotificationLog from "../models/notification.model.js";
 import Registration from "../models/registration.model.js";
+import Payment from "../models/payment.model.js";
 
 // Create and export new campaign(s) (supports both single and multiple objects)
 export const createCampaign = async (req, res) => {
@@ -143,11 +144,29 @@ export const getPaginatedCampaigns = async (req, res) => {
 
 export const getCampaginById = async (req, res) => {
   try {
-    const campaign = await Campaign.findById(req.params.id);
+    const { id } = req.params;
 
-    res.status(200).json({ results: campaign });
+    // Fetch data in parallel
+    const [campaign, registrations, donations] = await Promise.all([
+      Campaign.findById(id),
+      Registration.find({ campaign: id }).populate("volunteer"),
+      Payment.find({ campaign: id }).populate("userId"),
+    ]);
+
+    if (!campaign) {
+      return res.status(404).json({ message: "Campaign not found" });
+    }
+
+    // Spread campaign data and include registrations and donations
+    const response = {
+      ...campaign.toObject(), // Convert Mongoose document to plain object
+      registrations,
+      donations,
+    };
+
+    res.status(200).json({ results: response });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching campaigns", error });
+    res.status(500).json({ message: "Error fetching campaign data", error });
   }
 };
 

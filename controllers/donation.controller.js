@@ -15,7 +15,7 @@ export const donate = async (req, res) => {
     address,
     cardType,
     currency,
-    userId,
+    donor,
     campaignId,
     paymentMethodId,
   } = req.body;
@@ -28,7 +28,7 @@ export const donate = async (req, res) => {
     !address ||
     !cardType ||
     !currency ||
-    !userId ||
+    !donor ||
     !campaignId
   ) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -57,7 +57,7 @@ export const donate = async (req, res) => {
     // After payment is confirmed, save the payment data to the database
     if (paymentIntent.status === "succeeded") {
       const newPayment = new Payment({
-        userId,
+        donor,
         amount: amount,
         currency,
         paymentIntentId: paymentIntent.id,
