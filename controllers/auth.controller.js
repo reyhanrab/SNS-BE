@@ -243,16 +243,23 @@ export const resetPassword = async (req, res) => {
 
 export const resetPasswordWhenLoggedIn = async (req, res) => {
   const { id } = req.params;
-  const { password } = req.body;
+  const { currentPassword, password } = req.body;
 
   try {
     const user = await User.findById(id);
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid or expired code." });
+      return res.status(400).json({ message: "User not found." });
     }
 
-    // Validate password strength here if necessary
+    // Verify if the current password matches the one in the database
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ message: "Current password is incorrect." });
+    }
+
+    // Validate the strength of the new password if necessary
     if (password.length < 8) {
       return res.status(400).json({ message: "Password must be at least 8 characters long." });
     }
@@ -261,20 +268,22 @@ export const resetPasswordWhenLoggedIn = async (req, res) => {
     const isSamePassword = await bcrypt.compare(password, user.password);
 
     if (isSamePassword) {
-      return res
-        .status(400)
-        .json({ message: "New password cannot be the same as the current password." });
+      return res.status(400).json({
+        message: "New password cannot be the same as the current password.",
+      });
     }
 
     // Hash the new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Save the updated user
+    // Save the updated password in the database
     await User.findByIdAndUpdate(id, { password: hashedPassword });
 
     res.status(200).json({ message: "Password updated successfully." });
   } catch (err) {
+    console.error("Error updating password:", err);
     res.status(500).json({ message: "Server error. Please try again." });
   }
 };
+

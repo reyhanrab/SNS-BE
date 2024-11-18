@@ -4,6 +4,6 @@ import { saveDataToRedis, sendDataFromRedis } from "../lib/redis.js";
 const router = express.Router();
 
 // Get all notifications
-router.get("/", sendDataFromRedis, saveDataToRedis(), notificationController.getNotifications);
+router.get("/", notificationController.getNotifications);
 
 export default router;

@@ -193,7 +193,7 @@ app.use("/api/v1/user", logResponseBody, userRoutes);
 connect();
 
 //redis connection
-redisConnect();
+// redisConnect();
 
 // Start server
 const PORT = 3000;

@@ -4,10 +4,10 @@ import { clearRedisCache, saveDataToRedis, sendDataFromRedis } from "../lib/redi
 const router = express.Router();
 
 // Create a new campaign
-router.post("/", clearRedisCache("/campaign"), campaignController.createCampaign);
+router.post("/", campaignController.createCampaign);
 
 // Get all campaigns
-router.get("/", sendDataFromRedis, saveDataToRedis(), campaignController.getAllCampaigns);
+router.get("/", campaignController.getAllCampaigns);
 
 // Get all paginated
 router.get("/paginated", campaignController.getPaginatedCampaigns);
@@ -16,9 +16,9 @@ router.get("/paginated", campaignController.getPaginatedCampaigns);
 router.get("/:id", campaignController.getCampaginById);
 
 // Update a campaign
-router.patch("/:id", clearRedisCache("/campaign"), campaignController.updateCampaign);
+router.patch("/:id", campaignController.updateCampaign);
 
 // volunteer registration
-router.post("/:id/registration", clearRedisCache("/registration"), campaignController.register);
+router.post("/:id/registration", campaignController.register);
 
 export default router;

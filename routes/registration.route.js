@@ -4,12 +4,12 @@ import { clearRedisCache, saveDataToRedis, sendDataFromRedis } from "../lib/redi
 const router = express.Router();
 
 // Get all campaigns
-router.get("/", sendDataFromRedis, saveDataToRedis(), registrationController.getRegistrations);
+router.get("/", registrationController.getRegistrations);
 
 // volunteer check-in
-router.post("/:id/check-in", clearRedisCache("/registration"), registrationController.checkin);
+router.post("/:id/check-in", registrationController.checkin);
 
 // volunteer check-out
-router.post("/:id/check-out", clearRedisCache("/registration"), registrationController.checkout);
+router.post("/:id/check-out", registrationController.checkout);
 
 export default router;
