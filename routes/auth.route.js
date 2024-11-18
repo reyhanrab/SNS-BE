@@ -18,7 +18,7 @@ router.post("/signup", validate(signupValidation), authController.signup);
 router.patch("/login", validate(loginValidation), authController.login);
 
 // Logout
-router.patch("/logout", validate(signupValidation), authController.logout);
+router.patch("/logout", authController.logout);
 
 // forgot password
 router.patch("/forgot-password", validate(forgotPasswordValidation), authController.forgotPassword);

@@ -89,12 +89,12 @@ export const login = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
-  const email = req.body.email;
+  const userId = req.body.userId;
   const updateDataObj = {};
   updateDataObj.tokenStatus = false;
   updateDataObj.tokenCreatedAt = null;
   try {
-    const result = await User.updateOne({ email: email }, updateDataObj);
+    const result = await User.updateOne({ _id: userId }, updateDataObj);
     res
       .clearCookie("authtoken")
       .status(200)
