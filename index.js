@@ -8,6 +8,7 @@ import notificationRoutes from "./routes/notification.routes.js";
 import registrationRoutes from "./routes/registration.route.js";
 import donationRoutes from "./routes/donation.route.js";
 import userRoutes from "./routes/user.route.js";
+import metricRoutes from "./routes/metric.route.js";
 
 import User from "./models/user.model.js";
 import { connect } from "./config/dbconnection.js";
@@ -188,6 +189,7 @@ app.use("/api/v1/notification", logResponseBody, notificationRoutes);
 app.use("/api/v1/registration", logResponseBody, registrationRoutes);
 app.use("/api/v1/donation", logResponseBody, donationRoutes);
 app.use("/api/v1/user", logResponseBody, userRoutes);
+app.use("/api/v1/metric", logResponseBody, metricRoutes);
 
 //db connection
 connect();
