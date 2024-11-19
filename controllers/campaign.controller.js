@@ -72,7 +72,7 @@ export const createCampaign = async (req, res) => {
         await NotificationLog.create({
           email: volunteer.email,
           campaign: result._id, // Assuming result._id is the campaign ID
-          notificationType: "CampaignCreated",
+          notificationType: "New Campaign",
           sentAt: new Date(),
           status: "Sent",
         });
@@ -109,7 +109,7 @@ export const getAllCampaigns = async (req, res) => {
 // Get all paginated campaigns
 export const getPaginatedCampaigns = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
+  const limit = parseInt(req.query.limit) || 5;
 
   // Remove pagination parameters from query to use remaining ones as filters
   const filters = { ...req.query };
@@ -251,5 +251,21 @@ export const register = async (req, res) => {
       message: "An unexpected error occurred",
       error: error.message,
     });
+  }
+};
+
+
+// Delete a campaign
+export const deleteCampaign = async (req, res) => {
+  try {
+    const campaign = await Campaign.findByIdAndDelete(req.params.id);
+
+    if (!campaign) {
+      return res.status(404).json({ message: "c not found" });
+    }
+
+    res.status(200).json({ message: "Campaign deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting campaign", error });
   }
 };

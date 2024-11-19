@@ -18,6 +18,9 @@ router.get("/:id", campaignController.getCampaginById);
 // Update a campaign
 router.patch("/:id", campaignController.updateCampaign);
 
+// delete a campaign
+router.delete("/:id", campaignController.deleteCampaign);
+
 // volunteer registration
 router.post("/:id/registration", campaignController.register);
 
