@@ -106,31 +106,31 @@ export const donate = async (req, res) => {
 };
 
 export const donationByIdSummary = async (req, res) => {
-  const { userId } = req.params;
+  const { id } = req.params;
 
   try {
     // Fetch payments for the user
-    const payments = await Payment.find({ userId, status: "succeeded" });
+    const payments = await Payment.find({ userId: id, status: "succeeded" });
 
     // Calculate total donations
     const totalDonated = payments.reduce((sum, payment) => sum + payment.amount, 0);
 
     // Get unique campaigns supported
-    const campaignsSupported = new Set(payments.map((payment) => payment.campaign)).size;
+    const campaignsSupported = await Payment.distinct("campaign", { userId: id, status: "succeeded" });
 
     // Format the response
     const response = [
       {
         title: "Total Donated",
-        value: `$${(totalDonated / 100).toLocaleString()}`, // Convert cents to dollars
+        value: `$${totalDonated}`, // Convert cents to dollars
       },
       {
         title: "Campaigns Supported",
-        value: campaignsSupported.toString(),
+        value: campaignsSupported.length,
       },
     ];
 
-    res.status(200).json(response);
+    res.status(200).json({results: response});
   } catch (error) {
     console.error("Error fetching user summary:", error);
     res.status(500).json({ error: "An error occurred while fetching the user summary." });
