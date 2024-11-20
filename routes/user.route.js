@@ -1,6 +1,7 @@
 import express from "express";
 import * as userController from "../controllers/user.controller.js";
 import * as authController from "../controllers/auth.controller.js";
+import * as donationController from "../controllers/donation.controller.js";
 
 const router = express.Router();
 
@@ -15,6 +16,8 @@ router.get("/:id", userController.getUserById);
 
 // Get donations user by ID
 router.get("/:id/donations", userController.getDonationById);
+
+router.get("/:id/donation-summary", donationController.donationByIdSummary);
 
 // Update a user
 router.patch("/:id", userController.updateUser);

@@ -17,7 +17,7 @@ export const donate = async (req, res) => {
     address,
     cardType,
     currency,
-    donor,
+    userId,
     campaignId,
     paymentMethodId,
   } = req.body;
@@ -30,7 +30,7 @@ export const donate = async (req, res) => {
     !address ||
     !cardType ||
     !currency ||
-    !donor ||
+    !userId ||
     !campaignId
   ) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -38,7 +38,7 @@ export const donate = async (req, res) => {
 
   try {
     // Check if the donor exists in the User collection
-    const donorData = await User.findById(donor);
+    const donorData = await User.findById(userId);
     if (!donorData) {
       return res.status(404).json({ error: "Donor not found" });
     }
@@ -65,7 +65,7 @@ export const donate = async (req, res) => {
     // After payment is confirmed, save the payment data to the database
     if (paymentIntent.status === "succeeded") {
       const newPayment = new Payment({
-        donor,
+        userId,
         amount: amount,
         currency,
         paymentIntentId: paymentIntent.id,
@@ -102,5 +102,37 @@ export const donate = async (req, res) => {
     // Handle any errors that occurred
     console.error("Error processing payment:", error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+export const donationByIdSummary = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Fetch payments for the user
+    const payments = await Payment.find({ userId, status: "succeeded" });
+
+    // Calculate total donations
+    const totalDonated = payments.reduce((sum, payment) => sum + payment.amount, 0);
+
+    // Get unique campaigns supported
+    const campaignsSupported = new Set(payments.map((payment) => payment.campaign)).size;
+
+    // Format the response
+    const response = [
+      {
+        title: "Total Donated",
+        value: `$${(totalDonated / 100).toLocaleString()}`, // Convert cents to dollars
+      },
+      {
+        title: "Campaigns Supported",
+        value: campaignsSupported.toString(),
+      },
+    ];
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error("Error fetching user summary:", error);
+    res.status(500).json({ error: "An error occurred while fetching the user summary." });
   }
 };
