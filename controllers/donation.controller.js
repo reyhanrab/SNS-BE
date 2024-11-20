@@ -122,7 +122,7 @@ export const donationByIdSummary = async (req, res) => {
     const response = [
       {
         title: "Total Donated",
-        value: `$${totalDonated}`, // Convert cents to dollars
+        value: `$${(totalDonated / 100).toLocaleString()}`, // Convert cents to dollars
       },
       {
         title: "Campaigns Supported",
