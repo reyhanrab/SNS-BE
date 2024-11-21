@@ -12,7 +12,7 @@ import { validate } from "../lib/utils.js";
 const router = express.Router();
 
 // Register a new user
-router.post("/signup", validate(signupValidation), authController.signup);
+router.post("/signup", authController.signup);
 
 // Login
 router.patch("/login", validate(loginValidation), authController.login);

@@ -18,7 +18,7 @@ export const summary = async (req, res) => {
       totalCampaigns,
       totalVolunteers,
       totalActiveVolunteers,
-      totalDonations: totalDonations[0]?.totalAmount || 0,
+      totalDonations: (totalDonations[0]?.totalAmount/ 100).toLocaleString() || 0,
     }});
   } catch (error) {
     res.status(500).json({ error: "Error fetching dashboard summary." });
@@ -159,7 +159,7 @@ export const campaignDonations = async (req, res) => {
         const campaign = await Campaign.findById(donation._id);
         return {
           campaignTitle: campaign?.title || "Unknown Campaign", // Use 'title' from Campaign model
-          donations: donation.totalDonations,
+          donations: (donation.totalDonations/ 100).toLocaleString(),
         };
       })
     );
