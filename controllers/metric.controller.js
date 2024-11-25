@@ -10,15 +10,20 @@ export const summary = async (req, res) => {
     const totalVolunteers = await User.countDocuments({ role: "volunteer" });
     const distinctVolunteers = await Registration.distinct("volunteer");
     const totalActiveVolunteers = distinctVolunteers.length;
-    const totalDonations = await Payment.aggregate([
-      { $group: { _id: null, totalAmount: { $sum: "$amount" } } },
+    const totalDonations = await Campaign.aggregate([
+      {
+        $group: {
+          _id: null, // Group all documents together
+          totalAmount: { $sum: "$raisedAmount" }, // Sum the raisedAmount field
+        },
+      },
     ]);
 
     res.status(200).json({ results: {
       totalCampaigns,
       totalVolunteers,
       totalActiveVolunteers,
-      totalDonations: (totalDonations[0]?.totalAmount/ 100).toLocaleString() || 0,
+      totalDonations: (totalDonations[0]?.totalAmount).toLocaleString() || 0,
     }});
   } catch (error) {
     res.status(500).json({ error: "Error fetching dashboard summary." });
@@ -92,7 +97,7 @@ export const donationTrends = async (req, res) => {
     // Map the result to match the month names and donation totals
     const response = donationTrends.map((trend) => ({
       month: months[trend._id - 1], // Use the month name from the array
-      donations: trend.totalAmount, // The sum of donations for that month
+      donations: (trend.totalAmount / 100).toLocaleString(), // The sum of donations for that month
     }));
 
     res.status(200).json({ results: response });
@@ -140,32 +145,30 @@ export const volunteerTrends = async (req, res) => {
   }
 };
 
-// 5. Get list of donations per campaign
+// 5. Get most recent donation for campaign
 export const campaignDonations = async (req, res) => {
   try {
-    // Aggregate payments by campaign ID and sum the donation amounts
-    const campaignDonations = await Payment.aggregate([
-      {
-        $group: {
-          _id: "$campaign",  // Group by campaign ID (referencing 'campaign' in Payment model)
-          totalDonations: { $sum: "$amount" }, // Sum the donation amounts
-        },
-      },
-    ]);
+    // Fetch the 3 most recent payments
+    const recentPayments = await Payment.find()
+      .sort({ paymentDate: -1 }) // Sort by paymentDate in descending order
+      .limit(3) // Limit the results to 3
+      .populate("campaign", "title"); // Populate the campaign field to get the title
 
-    // Use Promise.all to fetch the campaign details for each donation record
-    const response = await Promise.all(
-      campaignDonations.map(async (donation) => {
-        const campaign = await Campaign.findById(donation._id);
-        return {
-          campaignTitle: campaign?.title || "Unknown Campaign", // Use 'title' from Campaign model
-          donations: (donation.totalDonations/ 100).toLocaleString(),
-        };
-      })
-    );
+    if (recentPayments.length === 0) {
+      return res.status(404).json({ message: "No payments found." });
+    }
 
-    res.status(200).json({ results: response });
+    // Prepare response data
+    const response = recentPayments.map((payment) => ({
+      campaignTitle: payment.campaign?.title || "Unknown Campaign",
+      donationAmount: (payment.amount / 100).toLocaleString(), // Format amount as a string
+      paymentDate: payment.paymentDate,
+    }));
+
+    // Send the response
+    res.status(200).json({results: response});
   } catch (error) {
-    res.status(500).json({ error: "Error fetching campaign donations." });
+    console.error("Error fetching recent donations:", error);
+    res.status(500).json({ error: "Error fetching recent donations." });
   }
-};
+}
