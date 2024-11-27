@@ -13,7 +13,14 @@ export const signup = async (req, res) => {
   let user;
 
   try {
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: userObj.email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User with this email already exists" });
+    }
+
     user = await post.save();
+    
     if (user) {
       const transporter = nodemailer.createdTransporter();
       const mailOptions = {
@@ -286,4 +293,3 @@ export const resetPasswordWhenLoggedIn = async (req, res) => {
     res.status(500).json({ message: "Server error. Please try again." });
   }
 };
-
