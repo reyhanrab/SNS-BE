@@ -47,7 +47,8 @@ export const getDonationById = async (req, res) => {
     const donations = await Payment.find({ userId: req.params.id })
       .populate("campaign") // Populate only the fields you need from the campaign
       .skip((page - 1) * limit) // Apply pagination with skip
-      .limit(limit); // Limit the number of results per page
+      .limit(limit) // Limit the number of results per page
+      .sort({ paymentDate: -1 }); // Sort by paymentDate in descending order
 
     // Get the total number of donations for the user
     const totalItems = await Payment.countDocuments({ userId: req.params.id });

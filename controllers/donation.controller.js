@@ -70,7 +70,7 @@ export const donate = async (req, res) => {
         currency,
         paymentIntentId: paymentIntent.id,
         status: paymentIntent.status,
-        paymentDate: new Date(),
+        paymentDate: new Date().toUTCString(),
         cardHolderName,
         cardType,
         country,
@@ -121,7 +121,7 @@ export const donationByIdSummary = async (req, res) => {
     const response = [
       {
         title: "Total Donated",
-        value: `$${(totalDonated / 100).toLocaleString()}`, // Convert cents to dollars
+        value: `$${(totalDonated).toLocaleString()}`, // Convert cents to dollars
       },
       {
         title: "Campaigns Supported",
