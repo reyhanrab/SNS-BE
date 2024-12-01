@@ -90,7 +90,6 @@ export const donate = async (req, res) => {
         amount
       );
 
-      console.log("Payment data saved successfully:", response);
       res.status(200).json({
         message: "Payment successful, Payment data saved successfully",
         result: newPayment,

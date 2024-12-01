@@ -97,7 +97,7 @@ export const donationTrends = async (req, res) => {
     // Map the result to match the month names and donation totals
     const response = donationTrends.map((trend) => ({
       month: months[trend._id - 1], // Use the month name from the array
-      donations: (trend.totalAmount / 100).toLocaleString(), // The sum of donations for that month
+      donations: trend.totalAmount, // The sum of donations for that month
     }));
 
     res.status(200).json({ results: response });
@@ -161,7 +161,7 @@ export const campaignDonations = async (req, res) => {
     // Prepare response data
     const response = recentPayments.map((payment) => ({
       campaignTitle: payment.campaign?.title || "Unknown Campaign",
-      donationAmount: (payment.amount / 100).toLocaleString(), // Format amount as a string
+      donationAmount: (payment.amount).toLocaleString(), // Format amount as a string
       paymentDate: payment.paymentDate,
     }));
 

@@ -157,11 +157,12 @@ export const getCampaginById = async (req, res) => {
       return res.status(404).json({ message: "Campaign not found" });
     }
 
+    // Spread campaign data and include registrations and formatted donations
     // Spread campaign data and include registrations and donations
     const response = {
       ...campaign.toObject(), // Convert Mongoose document to plain object
       registrations,
-      donations,
+      donations
     };
 
     res.status(200).json({ results: response });
@@ -253,7 +254,6 @@ export const register = async (req, res) => {
     });
   }
 };
-
 
 // Delete a campaign
 export const deleteCampaign = async (req, res) => {
